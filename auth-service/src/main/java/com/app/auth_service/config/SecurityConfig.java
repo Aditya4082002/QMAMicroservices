@@ -1,6 +1,7 @@
 package com.app.auth_service.config;
 
 import com.app.auth_service.jwt.JwtFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 @Configuration
 public class SecurityConfig {
 
@@ -24,7 +23,7 @@ public class SecurityConfig {
 
     @Autowired
     @Lazy
-    private OAuth2SuccessHandler oAuth2SuccessHandler; // ← inject the handler
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -33,39 +32,44 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/login/**").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
+                        // ✅ PUBLIC ENDPOINTS
                         .requestMatchers(
+                                "/auth/**",
+                                "/login/**",
+                                "/oauth2/**",
                                 "/swagger-ui/**",
-                                "/api-docs/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+
+                        // 🔒 EVERYTHING ELSE PROTECTED
                         .anyRequest().authenticated()
                 )
 
+                // ❌ Disable default login mechanisms
                 .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
 
-                // ✅ Sessions must be allowed so OAuth2 state/code flow works
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                // ✅ REQUIRED for OAuth2
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
 
-                .oauth2Login(oauth -> oauth
-                        // ✅ Use the handler instead of a redirect to a controller
-                        .successHandler(oAuth2SuccessHandler)
+                // ✅ OAuth2 success handler
+                .oauth2Login(oauth ->
+                        oauth.successHandler(oAuth2SuccessHandler)
                 )
 
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
+                // ✅ Custom 401 response
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint((request, response, authException) -> {
                             response.setContentType("application/json");
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.getWriter().write("{\"error\": \"Unauthorized\"}");
                         })
                 )
 
+                // 🔥 JWT FILTER
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
