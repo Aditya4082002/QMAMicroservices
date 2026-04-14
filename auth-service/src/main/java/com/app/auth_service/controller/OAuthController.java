@@ -58,7 +58,7 @@ public class OAuthController {
 
         // IMPORTANT: Change this URL to match exactly where your frontend is running
         // For example, if you use VS Code Live Server, it might be http://127.0.0.1:5500
-        String frontendUrl = "http://localhost:5500/dashboard.html"; 
+        String frontendUrl = "https://your-app.netlify.app/dashboard";
 
         // Build the redirect URL with the token and user info
 //        String redirectUrl = frontendUrl + "?token=" + token + "&email=" + encodedName;
