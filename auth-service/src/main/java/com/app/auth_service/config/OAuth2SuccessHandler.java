@@ -53,7 +53,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String encodedName = URLEncoder.encode(name != null ? name : email, StandardCharsets.UTF_8);
 
         // ⚠️ Change this to match your frontend URL
-        String frontendUrl = "https://qmareact.netlify.app/login";
+        String frontendUrl = "https://qmareact.netlify.app";
 //        String frontendUrl = "http://localhost:5500/dashboard.html";
         String redirectUrl  = frontendUrl + "?token=" + token + "&name=" + encodedName + "&email=" + email;
 
