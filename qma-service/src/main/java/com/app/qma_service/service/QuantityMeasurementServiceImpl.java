@@ -102,15 +102,38 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
 
 	}
 
+	private Measurable getUnit(String type, String unitName) {
+
+		switch (type.toUpperCase()) {
+
+			case "LENGTH":
+				return LengthUnit.valueOf(unitName);
+
+			case "WEIGHT":
+				return WeightUnit.valueOf(unitName);
+
+			case "VOLUME":
+				return VolumeUnit.valueOf(unitName);
+
+			case "TEMPERATURE":
+				return TemperatureUnit.valueOf(unitName);
+
+			default:
+				throw new IllegalArgumentException("Unsupported measurement type");
+		}
+	}
+
 	// CONVERT
 	@Override
 	public QuantityMeasurementDTO convert(QuantityInputDTO input, String username) {
 
-		Quantity q1 = toQuantity(input.getQuantity1());
+		QuantityDTO q1 = input.getQuantity1();
 
-	//			String target = input.getTargetUnit();
+		Measurable source = getUnit(q1.getMeasurementType(),q1.getUnit());
+		Measurable target = getUnit(q1.getMeasurementType(),input.getTargetUnit());
 
-		Quantity result = q1.convertTo(q1.getUnit().getClass().getEnumConstants()[0]);
+		Quantity<Measurable> quantity = new Quantity<>(q1.getValue(),source);
+		Quantity<Measurable> result = quantity.convertTo(target);
 
 		return save("CONVERT", q1.toString(), "-", result.toString(), username);
 
